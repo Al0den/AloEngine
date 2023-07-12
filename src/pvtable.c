@@ -24,7 +24,7 @@ int GetPvLine(const int depth, Board *pos) {
     return count;
 }
 
-const int HashSize = 0x100000 * 1024;
+const int HashSize = 0x100000 * 256;
 
 void ClearHashTable(S_HASHTABLE *table) {
 
