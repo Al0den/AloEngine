@@ -55,36 +55,43 @@ int EvaluatePosition(Board *pos) {
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score += PawnTable[SQ64(sq)];
+        score += PieceVal[pce];
     }
 
     pce = bP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= PawnTable[MIRROR64(SQ64(sq))];
+        score -= PieceVal[pce];
     }
 
     pce = wN;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score += KnightTable[SQ64(sq)];
+        score += PieceVal[pce];
+    
     }
 
     pce = bN;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= KnightTable[MIRROR64(SQ64(sq))];
+        score -= PieceVal[pce];
     }
 
     pce = wB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score += BishopTable[SQ64(sq)];
+        score += PieceVal[pce];
     }
 
     pce = bB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= BishopTable[MIRROR64(SQ64(sq))];
+        score -= PieceVal[pce];
     }
 
     pce = wR;
@@ -98,14 +105,17 @@ int EvaluatePosition(Board *pos) {
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= RookTable[MIRROR64(SQ64(sq))];
+        score -= PieceVal[pce];
     }
     pce = wQ;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
+        score += PieceVal[pce];
     }
     pce = bQ;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
+        score -= PieceVal[pce];
     }
 
 
@@ -116,6 +126,7 @@ int EvaluatePosition(Board *pos) {
     } else {
         score += KingO[SQ64(sq)];
     }
+    score += PieceVal[pce];
 
     pce = bK;
     sq = pos->plist[pce][0];
@@ -124,6 +135,7 @@ int EvaluatePosition(Board *pos) {
     } else {
         score -= KingO[MIRROR64(SQ64(sq))];
     }
+    score -= PieceVal[pce];
 
     if(pos->side == WHITE) {
         return score;
