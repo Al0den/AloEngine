@@ -144,6 +144,11 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
     }
 
     int score = -INFINITY;
+    int PvMove = NOMOVE;
+
+    if (ProbeHashEntry(pos, &PvMove, &score, alpha, beta, depth) == TRUE) {
+        return score;
+    }
 
     MoveList list[1];
     GenerateAllMoves(pos, list);
