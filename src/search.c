@@ -45,11 +45,62 @@ static void ClearForSearch(Board *pos, SearchInfo *info) {
     info->fhf = 0;
 }
 
+static int Quiescence(int alpha, int beta, Board *pos, SearchInfo *info) {
+    ASSERT(CheckBoard(pos));
+    if ((info->nodes & 2047) == 0) {
+        CheckUp(info);
+    }
+    info->nodes++;
+    if ((IsRepetition(pos) || pos->fiftyMove >= 100) && pos->ply) {
+        return 0;
+    }
+    if (pos->ply > MAX_DEPTH - 1) {
+        return EvaluatePosition(pos);
+    }
+    int score = EvaluatePosition(pos);
+    if (score >= beta) {
+        return beta;
+    }
+    if (score > alpha) {
+        alpha = score;
+    }
+
+    MoveList list[1];
+    GenerateAllCaptures(pos, list);
+
+    int MoveNum = 0;
+    int Legal = 0;
+    int OldAlpha = alpha;
+    int BestMove = NOMOVE;
+    int BestScore = -INFINITY;
+    score = -INFINITY;
+    for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
+        if (!MakeMove(pos, list->moves[MoveNum].move)) {
+            continue;
+        }
+        Legal++;
+        score = -Quiescence(-beta, -alpha, pos, info);
+        TakeMove(pos);
+        if (info->stopped == TRUE) {
+            return 0;
+        }
+        if (score > alpha) {
+            if (score >= beta) {
+                return beta;
+            }
+            alpha = score;
+            BestMove = list->moves[MoveNum].move;
+        }
+    }
+
+    return alpha;
+}
+
 static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *info, int DoNull) {
     ASSERT(CheckBoard(pos));
     if (depth == 0) {
         info->nodes++;
-        return EvaluatePosition(pos);
+        return Quiescence(alpha, beta, pos, info);
     }
 
     if ((info->nodes & 2047) == 0) {

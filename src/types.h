@@ -11,10 +11,9 @@
 #define INFINITY 30000
 #define ISMATE (INFINITY - MAX_DEPTH)
 
-// #define DEBUG
-
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
+// #define DEBUG
 #ifndef DEBUG
 #define ASSERT(n)
 #else
