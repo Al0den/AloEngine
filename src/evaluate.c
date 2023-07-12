@@ -30,7 +30,6 @@ int kingSafety(Board *pos, int roi);
 #define MIRROR64(sq) (Mirror64[(sq)])
 #define ENDGAME_MAT (1 * PieceVal[wR] + 2 * PieceVal[wN] + 2 * PieceVal[wP] + PieceVal[wK])
 
-
 int EvaluatePosition(Board *pos) {
     int pce;
     int pceNum;
@@ -54,54 +53,77 @@ int EvaluatePosition(Board *pos) {
     
     pce = wP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score += PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score += PawnTable[SQ64(sq)];
     }
 
     pce = bP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score -= PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score -= PawnTable[MIRROR64(SQ64(sq))];
     }
 
     pce = wN;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score += PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score += KnightTable[SQ64(sq)];
     }
 
     pce = bN;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score -= PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score -= KnightTable[MIRROR64(SQ64(sq))];
     }
 
     pce = wB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score += PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score += BishopTable[SQ64(sq)];
     }
 
     pce = bB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score -= PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score -= BishopTable[MIRROR64(SQ64(sq))];
     }
 
     pce = wR;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
+        sq = pos->plist[pce][pceNum];
+        score += RookTable[SQ64(sq)];
         score += PieceVal[pce];
+    
     }
     pce = bR;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        score -= PieceVal[pce];
+        sq = pos->plist[pce][pceNum];
+        score -= RookTable[MIRROR64(SQ64(sq))];
     }
-
     pce = wQ;
-    score += PieceVal[pce];
+    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
+        sq = pos->plist[pce][pceNum];
+    }
     pce = bQ;
-    score -= PieceVal[pce];
+    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
+        sq = pos->plist[pce][pceNum];
+    }
 
 
     pce = wK;
-    score += PieceVal[pce];
+    sq = pos->plist[pce][0];
+    if(pos->material[WHITE] < ENDGAME_MAT) {
+        score += KingE[SQ64(sq)];
+    } else {
+        score += KingO[SQ64(sq)];
+    }
 
     pce = bK;
-    score -= PieceVal[pce];
+    sq = pos->plist[pce][0];
+    if(pos->material[BLACK] < ENDGAME_MAT) {
+        score -= KingE[MIRROR64(SQ64(sq))];
+    } else {
+        score -= KingO[MIRROR64(SQ64(sq))];
+    }
 
     if(pos->side == WHITE) {
         return score;
