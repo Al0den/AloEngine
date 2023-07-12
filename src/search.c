@@ -21,6 +21,25 @@ int IsRepetition(const Board *pos) {
     return FALSE;
 }
 
+static void PickNextMove(int moveNum, MoveList *list) {
+    S_MOVE temp;
+    int index = 0;
+    int bestScore = 0;
+    int bestNum = moveNum;
+    for (index = moveNum; index < list->count; ++index) {
+        if (list->moves[index].score > bestScore) {
+            bestScore = list->moves[index].score;
+            bestNum = index;
+        }
+    }
+    ASSERT(moveNum >= 0 && moveNum < list->count);
+    ASSERT(bestNum >= 0 && bestNum < list->count);
+    ASSERT(bestNum >= moveNum);
+    temp = list->moves[moveNum];
+    list->moves[moveNum] = list->moves[bestNum];
+    list->moves[bestNum] = temp;
+}
+
 static void ClearForSearch(Board *pos, SearchInfo *info) {
     int index = 0;
     int index2 = 0;
@@ -75,6 +94,7 @@ static int Quiescence(int alpha, int beta, Board *pos, SearchInfo *info) {
     int BestScore = -INFINITY;
     score = -INFINITY;
     for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
+        PickNextMove(MoveNum, list);
         if (!MakeMove(pos, list->moves[MoveNum].move)) {
             continue;
         }
@@ -137,6 +157,7 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
     score = -INFINITY;
 
     for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
+        PickNextMove(MoveNum, list);
         if (!MakeMove(pos, list->moves[MoveNum].move)) {
             continue;
         }
