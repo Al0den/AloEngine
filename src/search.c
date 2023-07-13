@@ -205,6 +205,12 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
             BestMove = list->moves[MoveNum].move;
             if (score > alpha) {
                 if (score >= beta) {
+
+                    if (!(list->moves[MoveNum].move & MFLAGCAP)) {
+                        pos->searchKillers[1][pos->ply] = pos->searchKillers[0][pos->ply];
+                        pos->searchKillers[0][pos->ply] = list->moves[MoveNum].move;
+                    }
+
                     StoreHashEntry(pos, BestMove, beta, HFBETA, depth);
                     return beta;
                 }
