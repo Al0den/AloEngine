@@ -150,6 +150,20 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
         return score;
     }
 
+    //Null Move Pruning
+    if (DoNull && !inCheck && pos->ply && (pos->bigPce[pos->side] > 0) && depth >= 4) {
+        MakeNullMove(pos);
+        score = -AlphaBeta(-beta, -beta + 1, depth - 4, pos, info, FALSE);
+        TakeNullMove(pos);
+        if (info->stopped == TRUE) {
+            return 0;
+        }
+        if (score >= beta && abs(score) < ISMATE) {
+            return beta;
+        }
+    }
+
+
     MoveList list[1];
     GenerateAllMoves(pos, list);
 
