@@ -118,7 +118,6 @@ int EvaluatePosition(Board *pos) {
         score -= PieceVal[pce];
     }
 
-
     pce = wK;
     sq = pos->plist[pce][0];
     if(pos->material[WHITE] < ENDGAME_MAT) {

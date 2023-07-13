@@ -161,6 +161,16 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
 
     score = -INFINITY;
 
+    //PvMoves priority & ordering
+    if(PvMove != NOMOVE) {
+        for(MoveNum = 0; MoveNum < list->count; ++MoveNum) {
+            if(list->moves[MoveNum].move == PvMove) {
+                list->moves[MoveNum].score = 2000000;
+                break;
+            }
+        }
+    }
+
     for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
         PickNextMove(MoveNum, list);
         if (!MakeMove(pos, list->moves[MoveNum].move)) {
