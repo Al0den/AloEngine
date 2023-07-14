@@ -209,11 +209,13 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
                         pos->searchKillers[1][pos->ply] = pos->searchKillers[0][pos->ply];
                         pos->searchKillers[0][pos->ply] = list->moves[MoveNum].move;
                     }
+
                     StoreHashEntry(pos, BestMove, beta, HFBETA, depth);
 
                     return beta;
                 }
                 alpha = score;
+
             }
         }
     }

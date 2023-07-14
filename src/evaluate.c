@@ -55,18 +55,12 @@ int EvaluatePosition(Board *pos) {
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score += PawnTable[SQ64(sq)];
-        if((WhitePassedMask[SQ64(sq)] & pos->pawns[BLACK]) == 0) {
-            score += pawnPassed[RanksBrd[SQ64(sq)]];
-        }
     }
 
     pce = bP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= PawnTable[MIRROR64(SQ64(sq))];
-        if((BlackPassedMask[SQ64(sq)] & pos->pawns[WHITE]) == 0) {
-            score -= pawnPassed[7 - RanksBrd[SQ64(sq)]];
-        }
     }
 
     pce = wN;
@@ -86,11 +80,17 @@ int EvaluatePosition(Board *pos) {
         sq = pos->plist[pce][pceNum];
         score += BishopTable[SQ64(sq)];
     }
+    if(pos->pceNum[pce] >= 2) {
+        score += BishopDoubled;
+    }
 
     pce = bB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= BishopTable[MIRROR64(SQ64(sq))];
+    }
+    if(pos->pceNum[pce] >= 2) {
+        score -= BishopDoubled;
     }
 
     pce = wR;
