@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 const int pawnIsolated = -15;
-const int pawnPassed[8] = { 0, 5, 10, 20, 35, 60, 100, 200 };
+const int pawnPassed[8] = { 0, 5, 10, 15, 20, 40, 70, 100 };
 const int pawnShouldered = 3;
 const int bishopDoubled = 30;
 const int pawnDefended = 10;
