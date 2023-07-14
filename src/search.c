@@ -215,10 +215,6 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
                     return beta;
                 }
                 alpha = score;
-
-                if (!(list->moves[MoveNum].move & MFLAGCAP)) {
-                    pos->searchHistory[pos->pieces[FROMSQ(BestMove)]][TOSQ(BestMove)] += depth;
-                }
             }
         }
     }
