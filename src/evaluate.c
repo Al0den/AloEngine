@@ -80,17 +80,11 @@ int EvaluatePosition(Board *pos) {
         sq = pos->plist[pce][pceNum];
         score += BishopTable[SQ64(sq)];
     }
-    if(pos->pceNum[pce] >= 2) {
-        score += BishopDoubled;
-    }
 
     pce = bB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score -= BishopTable[MIRROR64(SQ64(sq))];
-    }
-    if(pos->pceNum[pce] >= 2) {
-        score -= BishopDoubled;
     }
 
     pce = wR;
