@@ -21,3 +21,4 @@ If any problem is encountered during compilation, removing `-Ofast` (Compiler op
 - History moves ordering 
 - Principal Variation Table
 - Basic pawn structure and position evaluation tables
+- Hashtable implementation, with biggest depth saving
