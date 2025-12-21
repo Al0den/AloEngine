@@ -1,16 +1,19 @@
 #include <stdio.h>
-#include "types.hpp"
+#include "alo/types.hpp"
+#include "alo/movegen.hpp"
+
+// Implementations for alo::MoveGenerator declared in include/alo/movegen.hpp
 
 #define MOVE(f, t, ca, pro, fl) ((f) | ((t) << 7) | ((ca) << 14) | ((pro) << 20) | (fl))
 #define SQOFFBOARD(sq) (FilesBrd[(sq)] == OFFBOARD)
 
-static int LoopSlidePiece[8] = { wB, wR, wQ, 0, bB, bR, bQ, 0 };
-static int LoopNonSlidePiece[6] = { wN, wK, 0, bN, bK, 0 };
+static const int LoopSlidePiece[8] = { wB, wR, wQ, 0, bB, bR, bQ, 0 };
+static const int LoopNonSlidePiece[6] = { wN, wK, 0, bN, bK, 0 };
 
-static int LoopSlideIndex[2] = { 0, 4 };
-static int LoopNonSlideIndex[2] = { 0, 3 };
+static const int LoopSlideIndex[2] = { 0, 4 };
+static const int LoopNonSlideIndex[2] = { 0, 3 };
 
-static int PceDir[13][8] = {
+static const int PceDir[13][8] = {
     { 0, 0, 0, 0, 0, 0, 0, 0 },
     { 0, 0, 0, 0, 0, 0, 0, 0 },
     { -8, -19, -21, -12, 8, 19, 21, 12 },
@@ -26,7 +29,7 @@ static int PceDir[13][8] = {
     { -1, -10, 1, 10, -9, -11, 11, 9 }
 };
 
-int NumDir[13] = { 0, 0, 8, 4, 4, 8, 8, 0, 8, 4, 4, 8, 8 };
+static const int NumDir[13] = { 0, 0, 8, 4, 4, 8, 8, 0, 8, 4, 4, 8, 8 };
 
 const int VictimScore[13] = { 0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600 };
 static int MvvLvaScores[13][13];
@@ -78,12 +81,14 @@ static void AddEnPassantMove(Board *pos, int move, MoveList *list) {
 
 static void AddWhitePawnMove(Board *pos, const int from, const int to, const int cap, MoveList *list) {
     if(RanksBrd[from] == RANK_7) {
-        AddCaptureMove(pos, MOVE(from, to, EMPTY, wQ, 0), list);
+        // Quiet promotions (no capture)
+        AddCaptureMove(pos, MOVE(from, to, EMPTY, wQ, 0), list); // boosted ordering
         AddCaptureMove(pos, MOVE(from, to, EMPTY, wR, 0), list);
         AddCaptureMove(pos, MOVE(from, to, EMPTY, wB, 0), list);
         AddCaptureMove(pos, MOVE(from, to, EMPTY, wN, 0), list);
     } else {
-        AddCaptureMove(pos, MOVE(from, to, EMPTY, EMPTY, 0), list);
+        // Simple quiet push
+        AddQuietMove(pos, MOVE(from, to, EMPTY, EMPTY, 0), list);
     }
 }
 
@@ -100,12 +105,14 @@ static void AddWhitePawnCapture(Board *pos, const int from, const int to, const 
 
 static void AddBlackPawnMove(Board *pos, const int from, const int to, const int cap, MoveList *list) {
     if(RanksBrd[from] == RANK_2) {
+        // Quiet promotions (no capture)
         AddCaptureMove(pos, MOVE(from, to, EMPTY, bQ, 0), list);
         AddCaptureMove(pos, MOVE(from, to, EMPTY, bR, 0), list);
         AddCaptureMove(pos, MOVE(from, to, EMPTY, bB, 0), list);
         AddCaptureMove(pos, MOVE(from, to, EMPTY, bN, 0), list);
     } else {
-        AddCaptureMove(pos, MOVE(from, to, EMPTY, EMPTY, 0), list);
+        // Simple quiet push
+        AddQuietMove(pos, MOVE(from, to, EMPTY, EMPTY, 0), list);
     }
 }
 
@@ -120,7 +127,7 @@ static void AddBlackPawnCapture(Board *pos, const int from, const int to, const 
     }
 }
 
-void GenerateAllMoves(Board *pos, MoveList *list) {
+void alo::MoveGenerator::generateAll(Board *pos, MoveList *list) {
     ASSERT(CheckBoard(pos));
 
     list->count = 0;
@@ -162,7 +169,7 @@ void GenerateAllMoves(Board *pos, MoveList *list) {
         }
         if(pos->castlePerm & WKCA) {
             if(pos->pieces[F1] == EMPTY && pos->pieces[G1] == EMPTY) {
-                if(!SqAttacked(E1, BLACK, pos) && !SqAttacked(F1, BLACK, pos)) {
+                if(!SqAttacked(E1, BLACK, pos) && !SqAttacked(F1, BLACK, pos) && !SqAttacked(G1, BLACK, pos)) {
                     AddQuietMove(pos, MOVE(E1, G1, EMPTY, EMPTY, MFLAGCA), list);
                 }
             }
@@ -281,7 +288,7 @@ void GenerateAllMoves(Board *pos, MoveList *list) {
     }
 }
 
-void GenerateAllCaptures(Board *pos, MoveList *list) {
+void alo::MoveGenerator::generateCaptures(Board *pos, MoveList *list) {
     ASSERT(CheckBoard(pos));
 
     list->count = 0;
@@ -395,9 +402,9 @@ void GenerateAllCaptures(Board *pos, MoveList *list) {
     }
 }
 
-int MoveExists(Board *pos, const int move) {
+int alo::MoveGenerator::moveExists(Board *pos, const int move) {
     MoveList list[1];
-    GenerateAllMoves(pos, list);
+    generateAll(pos, list);
     int MoveNum = 0;
     for(MoveNum = 0; MoveNum < list->count; ++MoveNum) {
         if(!MakeMove(pos, list->moves[MoveNum].move)) {
@@ -410,3 +417,8 @@ int MoveExists(Board *pos, const int move) {
     }
     return FALSE;
 }
+
+// C API wrappers
+void GenerateAllMoves(Board *pos, MoveList *list) { alo::MoveGenerator::generateAll(pos, list); }
+void GenerateAllCaptures(Board *pos, MoveList *list) { alo::MoveGenerator::generateCaptures(pos, list); }
+int MoveExists(Board *pos, const int move) { return alo::MoveGenerator::moveExists(pos, move); }

@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 
 int SqOnBoard(const int sq) {
     return FilesBrd[sq] == OFFBOARD ? 0 : 1;

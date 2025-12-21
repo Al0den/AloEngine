@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 
 char PceChar[] = ".PNBRQKpnbrqk";
 char SideChar[] = "wb-";

@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 
 long leafNodes = 0;
 

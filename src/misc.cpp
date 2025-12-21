@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 #include <stdio.h>
 
 #ifdef WIN32
@@ -30,7 +30,8 @@ int InputWaiting() {
     FD_SET(fileno(stdin), &readfds);
     tv.tv_sec = 0;
     tv.tv_usec = 0;
-    select(16, &readfds, NULL, NULL, &tv);
+    int fd = fileno(stdin);
+    select(fd + 1, &readfds, NULL, NULL, &tv);
     return (FD_ISSET(fileno(stdin), &readfds));
 #else
     static int init = 0, pipe;
@@ -58,13 +59,18 @@ int InputWaiting() {
 }
 
 void ReadInput(SearchInfo *info) {
-    int bytes;
-    char input[256], *endc;
+    int bytes = 0;
+    char input[256];
+    char *endc;
     if(InputWaiting()) {
         info->stopped = TRUE;
         do {
-            bytes=read(fileno(stdin), input, 256);
-        } while(bytes<0);
+            bytes = (int)read(fileno(stdin), input, 255);
+        } while(bytes < 0);
+        if (bytes <= 0) {
+            return;
+        }
+        input[bytes] = '\0';
         endc = strchr(input, '\n');
         if(endc) {
             *endc = 0;

@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 #include <stdio.h>
 
 #define HASH_PCE(pce, sq) (pos->posKey ^= (PieceKeys[(pce)][(sq)]))

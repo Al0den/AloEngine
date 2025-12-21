@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 
 const int KnDir[8] = {-8, -19, -21, -12, 8, 19, 21, 12};
 const int RkDir[4] = {-1, -10, 1, 10};

@@ -1,8 +1,8 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 #include <stdlib.h>
 
 int GetPvLine(const int depth, Board *pos) {
-    ASSERT(depth < MAXDEPTH && depth >= 1);
+    ASSERT(depth < MAX_DEPTH && depth >= 1);
 
     int move = ProbePvMove(pos);
     int count = 0;
@@ -37,6 +37,19 @@ void ClearHashTable(S_HASHTABLE *table) {
     table->newWrite = 0;
 }
 
+static int highestPowerOfTwo(int x);
+
+static void freeTable(S_HASHTABLE* table) {
+    if (table && table->pTable) {
+        free(table->pTable);
+        table->pTable = NULL;
+    }
+    table->numEntries = 0;
+    table->mask = 0;
+    table->newWrite = 0;
+    table->overWrite = 0;
+}
+
 static int highestPowerOfTwo(int x) {
     int p = 1;
     while (p << 1 <= x) p <<= 1;
@@ -65,6 +78,30 @@ void InitHashTable(S_HASHTABLE *table) {
     #ifdef DEBUG
     printf("HashTable init complete with %d entries\n", table->numEntries);
     #endif
+}
+
+// Re-initialize hash table with a given size in megabytes.
+// Frees previous allocation (if any) and resizes.
+void ReInitHashTable(S_HASHTABLE *table, int megabytes) {
+    if (megabytes < 1) megabytes = 1;
+    int targetBytes = megabytes * 1024 * 1024;
+    freeTable(table);
+    int entries = targetBytes / (int)sizeof(S_HASHENTRY);
+    if (entries < 1) entries = 1;
+    table->numEntries = highestPowerOfTwo(entries);
+    table->mask = (U64)(table->numEntries - 1);
+
+    void* mem = nullptr;
+    if (posix_memalign(&mem, 64, table->numEntries * sizeof(S_HASHENTRY)) != 0) {
+        mem = malloc(table->numEntries * sizeof(S_HASHENTRY));
+    }
+    table->pTable = (S_HASHENTRY*)mem;
+    if (table->pTable == NULL) {
+        table->numEntries = 0;
+        table->mask = 0;
+        return;
+    }
+    ClearHashTable(table);
 }
 
 int ProbeHashEntry(Board *pos, int *move, int *score, int alpha, int beta, int depth) {

@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 
  U64 GeneratePosKey(const Board* pos) {
     int sq = 0;

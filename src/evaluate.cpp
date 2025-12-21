@@ -1,5 +1,8 @@
-#include "types.hpp"
+#include "alo/types.hpp"
+#include "alo/evaluate.hpp"
 #include <stdio.h>
+
+// Implementation in alo::Evaluator (see include/alo/evaluate.hpp)
 
 const int pawnIsolated = -15;
 const int pawnPassed[8] = { 0, 5, 10, 15, 20, 40, 70, 100 };
@@ -23,39 +26,35 @@ extern const int KingE[64];
 extern const int KingO[64];
 
 int MaterialDraw(const Board *pos);
-int repetitions(Board *pos);
 int kingSafety(Board *pos, int roi);
 
 #define MIRROR64(sq) (Mirror64[(sq)])
 #define ENDGAME_MAT (1 * PieceVal[wR] + 2 * PieceVal[wN] + 2 * PieceVal[wP] + PieceVal[wK])
 
-int EvaluatePosition(Board *pos) {
+int alo::Evaluator::evaluate(Board *pos) {
     int pce;
     int pceNum;
     int sq;
     int score = pos->material[WHITE] - pos->material[BLACK];
 
-    //Check insufficient material draw
+    // Insufficient material draw
     if(!pos->pceNum[wP] && !pos->pceNum[bP] && MaterialDraw(pos) == TRUE) {
         return 0;
     }
-
-    //Check fifty move repetitions draw
+    // Fifty-move rule
     if(pos->fiftyMove >= 100) {
         return 0;
     }
-
-    //Check threefold repetitions draw
-    if(repetitions(pos)) {
+    // Threefold repetitions
+    if(IsRepetition(pos)) {
         return 0;
     }
-    
+
     pce = wP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
         score += PawnTable[SQ64(sq)];
     }
-
     pce = bP;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
@@ -67,7 +66,6 @@ int EvaluatePosition(Board *pos) {
         sq = pos->plist[pce][pceNum];
         score += KnightTable[SQ64(sq)];
     }
-
     pce = bN;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
@@ -79,7 +77,6 @@ int EvaluatePosition(Board *pos) {
         sq = pos->plist[pce][pceNum];
         score += BishopTable[SQ64(sq)];
     }
-
     pce = bB;
     for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
         sq = pos->plist[pce][pceNum];
@@ -96,37 +93,23 @@ int EvaluatePosition(Board *pos) {
         sq = pos->plist[pce][pceNum];
         score -= RookTable[MIRROR64(SQ64(sq))];
     }
-    pce = wQ;
-    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        sq = pos->plist[pce][pceNum];
-    }
+
+    pce = wQ; // currently no PST for queens
+    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) { (void)pos->plist[pce][pceNum]; }
     pce = bQ;
-    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) {
-        sq = pos->plist[pce][pceNum];
-    }
+    for(pceNum = 0; pceNum < pos->pceNum[pce]; ++pceNum) { (void)pos->plist[pce][pceNum]; }
 
     pce = wK;
     sq = pos->plist[pce][0];
-    if(pos->material[WHITE] < ENDGAME_MAT) {
-        score += KingE[SQ64(sq)];
-    } else {
-        score += KingO[SQ64(sq)];
-    }
-
+    if(pos->material[WHITE] < ENDGAME_MAT) score += KingE[SQ64(sq)]; else score += KingO[SQ64(sq)];
     pce = bK;
     sq = pos->plist[pce][0];
-    if(pos->material[BLACK] < ENDGAME_MAT) {
-        score -= KingE[MIRROR64(SQ64(sq))];
-    } else {
-        score -= KingO[MIRROR64(SQ64(sq))];
-    }
+    if(pos->material[BLACK] < ENDGAME_MAT) score -= KingE[MIRROR64(SQ64(sq))]; else score -= KingO[MIRROR64(SQ64(sq))];
 
-    if(pos->side == WHITE) {
-        return score;
-    } else {
-        return -score;
-    }
+    return (pos->side == WHITE) ? score : -score;
 }
+
+int EvaluatePosition(Board *pos) { return alo::Evaluator::evaluate(pos); }
 
 int MaterialDraw(const Board *pos) {
     if (!pos->pceNum[wR] && !pos->pceNum[bR] && !pos->pceNum[wQ] && !pos->pceNum[bQ]) {
@@ -149,18 +132,7 @@ int MaterialDraw(const Board *pos) {
   return FALSE;
 }
 
-int repetitions(Board *pos) {
-    int i,k=0;
-    for(i = 0; i < pos->hisPly; ++i) {
-        if(pos->history[i].posKey == pos->posKey) {
-            k++;
-        }
-        if (k >= 2) {
-            return TRUE;
-        };
-    }
-    return FALSE;
-}
+// Use IsRepetition from search.cpp for repetition detection
 
 const int PawnTable[64] = {
     0,  0,   0,   0,   0,   0,   0,   0,

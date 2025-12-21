@@ -1,9 +1,15 @@
-#include "types.hpp"
+#include "alo/types.hpp"
+#include "alo/search.hpp"
+#include "alo/tt.hpp"
 #include <stdlib.h>
 
 #define MATE 29000
 
-static void CheckUp(SearchInfo *info) {
+namespace alo {
+Searcher::Searcher(Board* p, SearchInfo* i) : pos(p), info(i), tt(p->HashTable) {}
+} // namespace alo
+
+void alo::Searcher::checkUp() {
     if (info->timeset == TRUE && GetTimeMS() > info->stopTime) {
         info->stopped = TRUE;
     }
@@ -21,7 +27,7 @@ int IsRepetition(const Board *pos) {
     return FALSE;
 }
 
-static void PickNextMove(int moveNum, MoveList *list) {
+void alo::Searcher::pickNextMove(int moveNum, MoveList *list) {
     S_MOVE temp;
     int index = 0;
     int bestScore = 0;
@@ -40,7 +46,7 @@ static void PickNextMove(int moveNum, MoveList *list) {
     list->moves[bestNum] = temp;
 }
 
-static void ClearForSearch(Board *pos, SearchInfo *info) {
+void alo::Searcher::clearForSearch() {
     int index = 0;
     int index2 = 0;
     for (index = 0; index < 13; ++index) {
@@ -64,10 +70,10 @@ static void ClearForSearch(Board *pos, SearchInfo *info) {
     info->fhf = 0;
 }
 
-static int Quiescence(int alpha, int beta, Board *pos, SearchInfo *info) {
+int alo::Searcher::quiescence(int alpha, int beta) {
     ASSERT(CheckBoard(pos));
     if ((info->nodes & 2047) == 0) {
-        CheckUp(info);
+        checkUp();
     }
     info->nodes++;
     if ((IsRepetition(pos) || pos->fiftyMove >= 100) && pos->ply) {
@@ -94,12 +100,12 @@ static int Quiescence(int alpha, int beta, Board *pos, SearchInfo *info) {
     int BestScore = -SCORE_INF;
     score = -SCORE_INF;
     for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
-        PickNextMove(MoveNum, list);
+        pickNextMove(MoveNum, list);
         if (!MakeMove(pos, list->moves[MoveNum].move)) {
             continue;
         }
         Legal++;
-        score = -Quiescence(-beta, -alpha, pos, info);
+        score = -quiescence(-beta, -alpha);
         TakeMove(pos);
         if (info->stopped == TRUE) {
             return 0;
@@ -116,15 +122,14 @@ static int Quiescence(int alpha, int beta, Board *pos, SearchInfo *info) {
     return alpha;
 }
 
-static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *info, int DoNull) {
+int alo::Searcher::alphaBeta(int alpha, int beta, int depth, int DoNull) {
     ASSERT(CheckBoard(pos));
     if (depth == 0) {
-        info->nodes++;
-        return Quiescence(alpha, beta, pos, info);
+        return quiescence(alpha, beta);
     }
 
     if ((info->nodes & 2047) == 0) {
-        CheckUp(info);
+        checkUp();
     }
 
     info->nodes++;
@@ -146,14 +151,14 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
     int score = -SCORE_INF;
     int PvMove = NOMOVE;
 
-    if (ProbeHashEntry(pos, &PvMove, &score, alpha, beta, depth) == TRUE) {
+    if (tt.probe(pos, &PvMove, &score, alpha, beta, depth)) {
         return score;
     }
 
     //Null Move Pruning
     if (DoNull && !inCheck && pos->ply && (pos->bigPce[pos->side] > 0) && depth >= 6) {
         MakeNullMove(pos);
-        score = -AlphaBeta(-beta, -beta + 1, depth - 6, pos, info, FALSE);
+        score = -alphaBeta(-beta, -beta + 1, depth - 6, FALSE);
         TakeNullMove(pos);
         if (info->stopped == TRUE) {
             return 0;
@@ -186,7 +191,7 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
     }
 
     for (MoveNum = 0; MoveNum < list->count; ++MoveNum) {
-        PickNextMove(MoveNum, list);
+        pickNextMove(MoveNum, list);
         if (!MakeMove(pos, list->moves[MoveNum].move)) {
             continue;
         }
@@ -200,11 +205,11 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
             reduction = 1;
         }
 
-        score = -AlphaBeta(-beta, -alpha, depth - 1 - reduction, pos, info, TRUE);
+        score = -alphaBeta(-beta, -alpha, depth - 1 - reduction, TRUE);
 
         // If reduced and improved, re-search at full depth
         if (reduction && score > alpha) {
-            score = -AlphaBeta(-beta, -alpha, depth - 1, pos, info, TRUE);
+            score = -alphaBeta(-beta, -alpha, depth - 1, TRUE);
         }
 
         TakeMove(pos);
@@ -221,7 +226,7 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
                         pos->searchKillers[0][pos->ply] = list->moves[MoveNum].move;
                     }
 
-                    StoreHashEntry(pos, BestMove, beta, HFBETA, depth);
+                    tt.store(pos, BestMove, beta, HFBETA, depth);
 
                     return beta;
                 }
@@ -241,40 +246,68 @@ static int AlphaBeta(int alpha, int beta, int depth, Board *pos, SearchInfo *inf
     
     //Store in hashtable
     if (alpha != OldAlpha) {
-        StoreHashEntry(pos, BestMove, BestScore, HFEXACT, depth);
+        tt.store(pos, BestMove, BestScore, HFEXACT, depth);
     } else {
-        StoreHashEntry(pos, BestMove, alpha, HFALPHA, depth);
+        tt.store(pos, BestMove, alpha, HFALPHA, depth);
     }
 
     return alpha;
 }
 
-void SearchPosition(Board *pos, SearchInfo *info) {
+int alo::Searcher::searchScore(int depth, int time_ms) {
+    ASSERT(CheckBoard(pos));
+
+    // Configure SearchInfo
+    info->depth   = depth;
+    info->nodes   = 0;
+    info->fh      = 0;
+    info->fhf     = 0;
+    info->stopped = FALSE;
+    info->quit    = FALSE;
+
+    info->startTime = GetTimeMS();
+    if (time_ms > 0) {
+        info->timeset  = TRUE;
+        info->stopTime = info->startTime + time_ms;
+    } else {
+        info->timeset  = FALSE;
+        info->stopTime = 0;
+    }
+
+    clearForSearch();
+
+    // One call, no iterative deepening, no printing
+    int score = alphaBeta(-SCORE_INF, SCORE_INF, depth, TRUE);
+    return score;
+}
+
+void alo::Searcher::searchPosition() {
     int bestMove = NOMOVE;
     int bestScore = -SCORE_INF;
     int currentDepth = 0;
     int pvMoves = 0;
     int pvNum = 0;
 
-    ClearForSearch(pos, info);
+    clearForSearch();
 
     for (currentDepth = 1; currentDepth <= info->depth; ++currentDepth) {
-        bestScore = AlphaBeta(-SCORE_INF, SCORE_INF, currentDepth, pos, info, TRUE);
+        bestScore = alphaBeta(-SCORE_INF, SCORE_INF, currentDepth, TRUE);
 
         if (info->stopped == TRUE) {
             break;
         }
 
-        pvMoves = GetPvLine(currentDepth, pos);
+        pvMoves = tt.getPvLine(currentDepth, pos);
         bestMove = pos->PvArray[0];
+        int elapsed = GetTimeMS() - info->startTime;
+        if (elapsed < 1) elapsed = 1;
+        int nps = (int)(info->nodes / (elapsed / 1000.0));
         if (bestScore > 28500) {
             printf("info score mate %d depth %d nodes %ld time %d nps %d ", (29000 - bestScore) / 2, currentDepth, info->nodes,
-                   (GetTimeMS() - info->startTime), (int)(info->nodes / ((GetTimeMS() - info->startTime) / 1000.0)));
+                   elapsed, nps);
         } else {
-            printf("info score cp %d depth %d nodes %ld time %d nps %d ", bestScore, currentDepth, info->nodes, (GetTimeMS() - info->startTime),
-                   (int)(info->nodes / ((GetTimeMS() - info->startTime) / 1000.0)));
+            printf("info score cp %d depth %d nodes %ld time %d nps %d ", bestScore, currentDepth, info->nodes, elapsed, nps);
         }
-        pvMoves = GetPvLine(currentDepth, pos);
         printf("pv");
         for (pvNum = 0; pvNum < pvMoves; ++pvNum) {
             printf(" %s", PrMove(pos->PvArray[pvNum]));
@@ -282,4 +315,15 @@ void SearchPosition(Board *pos, SearchInfo *info) {
         printf("\n");
     }
     printf("bestmove %s\n", PrMove(bestMove));
+}
+
+// Free function keeps API stable
+void SearchPosition(Board *pos, SearchInfo *info) {
+    alo::Searcher s(pos, info);
+    s.searchPosition();
+}
+
+int SearchScore(Board *pos, SearchInfo *info, int depth, int time_ms) {
+    alo::Searcher s(pos, info);
+    return s.searchScore(depth, time_ms);
 }

@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
 
-#include "types.hpp"
+#include "alo/types.hpp"
 
 #define CASTLE1 "r1r3k1/1p1b1ppp/p1p1pn2/2P5/2B1P3/1P1P1N2/P4PPP/R3R1K1 w - - 0 1"
 

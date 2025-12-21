@@ -1,4 +1,4 @@
-#include "types.hpp"
+#include "alo/types.hpp"
 #include <stdio.h>
 
 const int BitTables[64] = {
