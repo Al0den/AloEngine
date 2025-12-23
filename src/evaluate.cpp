@@ -1,6 +1,7 @@
 #include "alo/types.hpp"
 #include "alo/evaluate.hpp"
 #include <stdio.h>
+#include "alo/nnue.hpp"
 
 // Implementation in alo::Evaluator (see include/alo/evaluate.hpp)
 
@@ -31,7 +32,12 @@ int kingSafety(Board *pos, int roi);
 #define MIRROR64(sq) (Mirror64[(sq)])
 #define ENDGAME_MAT (1 * PieceVal[wR] + 2 * PieceVal[wN] + 2 * PieceVal[wP] + PieceVal[wK])
 
+static bool NNUE = false;
+
 int alo::Evaluator::evaluate(Board *pos) {
+    if (NNUE) {
+        return NNUE_Evaluate(pos);
+    }
     int pce;
     int pceNum;
     int sq;

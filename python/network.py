@@ -7,7 +7,7 @@ from feature import TOTAL_FEATURES
 
 INPUT_DIM   = TOTAL_FEATURES   # 81920
 HIDDEN_SIZE = 256              # pick what you want
-FC2_SIZE    = 32
+FC2_SIZE    = 64
 
 
 class NNUEHalfKP(nn.Module):

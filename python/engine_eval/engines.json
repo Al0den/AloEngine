@@ -1,0 +1,121 @@
+{
+    "Stockfish": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 3600,
+        "options": {
+            "Threads": "1",
+            "Hash": "256"
+        }
+    },
+    "Stockfish-2600": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 2600,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "2600"
+        }
+    },
+    "Stockfish-2400": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 2400,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "2400"
+        }
+    },
+    "Stockfish-2200": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 2200,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "2200"
+        }
+    },
+    "Stockfish-1800": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 1800,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "1800"
+        }
+    },
+    "GNU-Chess": {
+        "path": "/opt/homebrew/bin/gnuchessu",
+        "elo": 2661,
+        "options": {
+            "Threads": "1",
+            "Hash": "256"
+        }
+    },
+    "AloEngine-No-NNUE": {
+        "path": "../../build/AloEngine-No-NNUE"
+    },
+    "Stockfish-2000": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 2000,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "2000"
+        }
+    },
+    "Stockfish-2100": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 2100,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "2100"
+        }
+    },
+    "Stockfish-1900": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 1900,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "1900"
+        }
+    },
+    "Stockfish-1700": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 1700,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "1700"
+        }
+    },
+    "Stockfish-1500": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 1500,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "1500"
+        }
+    },
+    "Stockfish-1600": {
+        "path": "/opt/homebrew/bin/stockfish",
+        "elo": 1600,
+        "options": {
+            "Threads": "1",
+            "Hash": "256",
+            "UCI_LimitStrength": "true",
+            "UCI_Elo": "1600"
+        }
+    }
+}

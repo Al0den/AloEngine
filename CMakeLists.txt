@@ -21,7 +21,7 @@ set(ENGINE_SOURCES ${SRC_FILES})
 list(FILTER ENGINE_SOURCES EXCLUDE REGEX ".*/perft_main\\.cpp$")
 add_executable(AloEngine ${ENGINE_SOURCES})
 
-target_include_directories(AloEngine PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(AloEngine PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
 
 # Optimize in Release builds similar to the Makefile
 if(MSVC)
@@ -42,8 +42,9 @@ add_custom_target(run
 # Perft target: build a separate binary without main.cpp
 set(PERFT_SOURCES ${SRC_FILES})
 list(FILTER PERFT_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
+list(FILTER PERFT_SOURCES EXCLUDE REGEX ".*/perft_main\\.cpp$")
 add_executable(perft ${PERFT_SOURCES} ${CMAKE_SOURCE_DIR}/src/perft_main.cpp)
-target_include_directories(perft PRIVATE ${CMAKE_SOURCE_DIR}/src)
+target_include_directories(perft PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
 if(MSVC)
   target_compile_options(perft PRIVATE $<$<CONFIG:Release>:/O2>)
 else()
@@ -58,27 +59,42 @@ add_custom_target(perft-run
   COMMENT "Running perft at depth 5"
 )
 
-# Eval: Elo estimator utility
-add_executable(evaluate_elo ${CMAKE_SOURCE_DIR}/eval/evaluate_elo.cpp)
-if(MSVC)
-  target_compile_options(evaluate_elo PRIVATE $<$<CONFIG:Release>:/O2>)
-else()
-  target_compile_options(evaluate_elo PRIVATE $<$<CONFIG:Release>:-O3 -ffast-math -march=native -flto -fno-exceptions -fno-rtti>)
-  target_link_options(evaluate_elo PRIVATE $<$<CONFIG:Release>:-flto -Wl,-dead_strip>)
-endif()
-
-# UCI match runner: link core sources except engine mains
-set(MATCH_SOURCES ${SRC_FILES})
-list(FILTER MATCH_SOURCES EXCLUDE REGEX ".*/main\\.cpp$")
-list(FILTER MATCH_SOURCES EXCLUDE REGEX ".*/perft_main\\.cpp$")
-add_executable(uci_match ${MATCH_SOURCES} ${CMAKE_SOURCE_DIR}/tools/uci_match.cpp)
-target_include_directories(uci_match PRIVATE ${CMAKE_SOURCE_DIR}/src)
-if(MSVC)
-  target_compile_options(uci_match PRIVATE $<$<CONFIG:Release>:/O2>)
-else()
-  target_compile_options(uci_match PRIVATE $<$<CONFIG:Release>:-O3 -ffast-math -march=native -flto -fno-exceptions -fno-rtti>)
-  target_link_options(uci_match PRIVATE $<$<CONFIG:Release>:-flto -Wl,-dead_strip>)
-endif()
-
 # Export compile_commands.json for tooling
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Perft suite runner: read (depth,FEN) lines from a file and write timing/NPS results.
+add_executable(perft_suite
+  ${PERFT_SOURCES}
+  ${CMAKE_SOURCE_DIR}/tools/perft_suite.cpp
+)
+target_include_directories(perft_suite PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+  target_compile_options(perft_suite PRIVATE $<$<CONFIG:Release>:/O2>)
+else()
+  target_compile_options(perft_suite PRIVATE $<$<CONFIG:Release>:-O3 -march=native -flto -fno-exceptions -fno-rtti>)
+  target_link_options(perft_suite PRIVATE $<$<CONFIG:Release>:-flto -Wl,-dead_strip>)
+endif()
+
+# -------------------------
+# Self-play dataset generator
+# -------------------------
+# Reuse PERFT_SOURCES (no main.cpp, no perft_main.cpp) and add selfplay_main.cpp
+add_executable(selfplay
+  ${PERFT_SOURCES}
+  ${CMAKE_SOURCE_DIR}/tools/selfplay_main.cpp
+)
+
+target_include_directories(selfplay PRIVATE ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include)
+if(MSVC)
+  target_compile_options(selfplay PRIVATE $<$<CONFIG:Release>:/O2>)
+else()
+  target_compile_options(selfplay PRIVATE $<$<CONFIG:Release>:-O3 -march=native -flto -fno-exceptions -fno-rtti>)
+  target_link_options(selfplay PRIVATE $<$<CONFIG:Release>:-flto -Wl,-dead_strip>)
+endif()
+
+add_custom_target(selfplay-run
+  COMMAND selfplay 1000 nnue_dataset.jsonl
+  DEPENDS selfplay
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  COMMENT "Running selfplay to generate NNUE dataset"
+)

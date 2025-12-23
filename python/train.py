@@ -9,27 +9,24 @@ from utils import nnue_collate
 
 
 def train_nnue(
-    jsonl_path,
+    dataset_path,
     epochs=5,
     batch_size=1024,
     lr=1e-3,
-    max_abs_cp=4410.0,
     device=None,
     save_path="../data/nnue_model.pth",
 ):
     if device is None:
         device = torch.device(
-            "mps" if torch.backends.mps.is_available()
-            else "cuda" if torch.cuda.is_available()
+            "cuda" if torch.cuda.is_available()
             else "cpu"
         )
 
-    dataset = NNUEDataset(jsonl_path, max_abs_cp=max_abs_cp)
+    dataset = NNUEDataset(dataset_path)
     loader = DataLoader(
         dataset,
         batch_size=batch_size,
-        shuffle=True,
-        num_workers=4,
+        num_workers=1,
         collate_fn=nnue_collate,   # ← key change
         pin_memory=True,
     )
@@ -74,10 +71,9 @@ if __name__ == "__main__":
     )
 
     model = train_nnue(
-        jsonl_path="../data/nnue_dataset.jsonl",
+        dataset_path="../data/dataset/",
         epochs=1000,
         batch_size=2048,
         lr=1e-3,
-        max_abs_cp=4410.0,
         device=device,
     )
