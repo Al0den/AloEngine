@@ -1,0 +1,8 @@
+python
+pytorch
+pandas
+dataset
+python-chess
+tqdm
+scipy
+numpy
